@@ -23,7 +23,7 @@
 <input type="button" value="..." id="checkButton">
 
 </p>　
- <δme>Destraction</δme>
+ <me>Destraction</me>
 
 <p id="dest"></p>
 
@@ -31,7 +31,8 @@
 
 <p id="me13"></p>
 <script>
-
+const deta="33550336,δ-me13,irontomb,destraction,";
+    
 let nameText = document.getElementById('nameText');
 
 let neikos = document.getElementById('neikos');
@@ -48,17 +49,17 @@ function buttonClick(){
 
   let currentValue = nameText.value;
 
-  if (currentValue === 'Neikos496' || currentValue === '335550336'||currentValue===''||currentValue===''||currentValue===''){
+  if (currentValue === 'Neikos496' || currentValue === '33550336'||currentValue===''||currentValue===''||currentValue===''){
 
     dest.innerText='全ては徒労';
-
+     me13.innerText = '';
     neikos.innerText='';
 
   }else if(currentValue===''){
     dest.innerText = '';
     neikos.innerText='NULL';
-    msg.innerText='NULL';
-  }else{
+    me13.innerText = '';
+  }else if(deta.includes(currentValue)){
     neikos.innerText ='';
     dest.innerText = '';
     me13.innerText = '';
