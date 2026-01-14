@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width">
+
+<title>全ては徒労</title>
+
+</head>
+
+<body>
+
+<h1></h1>
+
+<p>
+
+<label>検索：<input type="text" id="nameText"></label>
+
+<input type="button" value="..." id="checkButton">
+
+</p>　
+ <δme>Destraction</δme>
+
+<p id="dest"></p>
+
+<p id="neikos"></p>
+
+<p id="me13"></p>
+<script>
+
+let nameText = document.getElementById('nameText');
+
+let neikos = document.getElementById('neikos');
+
+let dest = document.getElementById('dest');
+
+let me13 = document.getElementById('me13');
+  
+let checkButton = document.getElementById('checkButton');
+
+nameText.value = '全ては徒労...'; // 画面上の■■■■■■■入力欄の■■値を直接■■■設■定
+
+function buttonClick(){
+
+  let currentValue = nameText.value;
+
+  if (currentValue === 'Neikos496' || currentValue === '335550336'||currentValue===''||currentValue===''||currentValue===''){
+
+    dest.innerText='全ては徒労';
+
+    neikos.innerText='';
+
+  }else if(currentValue===''){
+    dest.innerText = '';
+    neikos.innerText='NULL';
+    msg.innerText='NULL';
+  }else{
+    neikos.innerText ='';
+    dest.innerText = '';
+    me13.innerText = '';
+
+  }
+
+}
+
+// 
+
+checkButton.addEventListener('click', buttonClick);
+
+  </script>
+
+</body>
+
+  </html>
