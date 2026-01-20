@@ -153,7 +153,7 @@ a.btn--yellow {
   color: #000;
   background-color: #fff100;
   border-bottom: 5px solid #ccc100;
-  font-size: 0.1rem;
+  font-size: 1rem;
 }
 
 a.btn--yellow:hover {
@@ -161,5 +161,5 @@ a.btn--yellow:hover {
   color: #000;
   background: # fff20a;
   border-bottom: 2px solid #ccc100;
-  font-size: 0.1rem;
+  font-size: 0.9rem;
 }
