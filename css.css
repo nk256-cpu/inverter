@@ -77,62 +77,89 @@ opacity:0.8;
 *:before,
 *:after {
   -webkit-box-sizing: inherit;
-    box-sizing: inherit;
-    }
+  box-sizing: inherit;
+}
 
-    html {
-      -webkit-box-sizing: border-box;
-        box-sizing: border-box;
-          font-size: 62.5%;
-          }
+html {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  font-size: 62.5%;/*rem算出をしやすくするために*/
+}
+.bnt,
+.btn,
+title.btn,
+a.btn,
+button.btn {
+  
+  font-weight: 700;
+  line-height: 1.5;
+  position: relative;
+  display: inline-block;
+  padding: 1rem 2rem;
+  cursor: pointer;
+  
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  text-align: center;
+  vertical-align: middle;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  color: #212529;
+  border-radius: 0.5rem;
+}
+button.bnt {
+  font-size: 0.1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  position: relative;
+  
+  padding: 1rem 2rem;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-transition: all 0.3s;
+  transition: all 0.3s;
+  text-align: center;
+  vertical-align: middle;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  color: #212529;
+  border-radius: 0.5rem;
+}
+   
+a.btn--red{
+  padding: 1rem 5rem;
+  color:#000;
+  background-color:#fff20a ;
+  border-buttom: 5px solid #ccc100;
+  font-size: 1.75rem;
+  white-space: nowrap;
+}
+a.btn--red:hover{
+  padding: 1rem 10rem;
+  margin-top: 4px;
+  color: #000;
+  background: # fff20a;
+  border-bottom: 2px solid #ccc100;
+  font-size: 9rem;
+}
+a.btn--yellow {
+  color: #000;
+  background-color: #fff100;
+  border-bottom: 5px solid #ccc100;
+  
+}
 
-/*まずはお決まりのボックスサイズ算出をborer-boxに */
-*,
-*:before,
-*:after {
-  -webkit-box-sizing: inherit;
-    box-sizing: inherit;
-    }
-
-    html {
-      -webkit-box-sizing: border-box;
-        box-sizing: border-box;
-          font-size: 62.5%;/*rem算出をしやすくするために*/
-          }
-
-          .btn,
-          a.btn,
-          button.btn {
-            font-size: 1.6rem;
-              font-weight: 700;
-                line-height: 1.5;
-                  position: relative;
-                    display: inline-block;
-                      padding: 1rem 4rem;
-                        cursor: pointer;
-                          -webkit-user-select: none;
-                            -moz-user-select: none;
-                              -ms-user-select: none;
-                                user-select: none;
-                                  -webkit-transition: all 0.3s;
-                                    transition: all 0.3s;
-    text-align: center;
-    vertical-align: middle;
-    text-decoration: none;
-    letter-spacing: 0.1em;
-    color: #212529;
-                                                border-radius: 0.5rem;
-                                                }
-
-                                                a.btn--yellow {
-                                                  color: #000;
-                                                    background-color: #fff100;
-                                                      border-bottom: 5px solid #ccc100;
-                                                      }
-
-                                                      a.btn--yellow:hover {
-                                                        margin-top: 3px;
-                                                          color: #000;
-                                                            background: #fff20a;
-                                                              border-bottom: 2px solid #ccc100;
-                                                      }
+a.btn--yellow:hover {
+  margin-top: 3px;
+  color: #000;
+  background: # fff20a;
+  border-bottom: 2px solid #ccc100;
+  font-size: 0.1rem;
+}
