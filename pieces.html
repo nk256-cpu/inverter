@@ -9,11 +9,67 @@
     </head>
     <body style="background-color: FFFFCC; text-align: center;">
         <a href="https://nk256-cpu.github.io/inverter/"class="btn btn--red btn--cubic">三相インバータの製作・高効率化</a>
+ <label>検索：<input type="text" id="nameText"></label>
+
+<input type="button" value="" id="checkButton">
+
+</p>　
+ <h2>単語検索機能</h2>
+
+<p id="neikos"></p>
+
+<p id="dest"></p>
+<script>
+const sic="SiCショットキーバリアダイオード 650V6A PCDP0665G1";
+const sot23="SOT23変換基板 裏面パターン付 金フラッシュ";
+const mcp1420="ゲートドライバー MCP1402T";
+let nameText = document.getElementById('nameText');
+
+let neikos = document.getElementById('neikos');
+
+let dest = document.getElementById('dest');
+
+
+
+let checkButton = document.getElementById('checkButton');
+
+nameText.value = '検索ワードを入力...'; //
+  
+
+function buttonClick(){
+
+  let currentValue = nameText.value;
+
+
+  if(sic.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = 'SiCショットキーバリアダイオード';
+    url='https://akizukidenshi.com/catalog/g/g115960/';
+    document.getElementById('sic').style.display = 'inline';
+  }else {
+    document.getElementById('sic').style.display = 'none';
+  }
+  if(sot23.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = 'SOT23変換基板 裏面パターン付 金フラッシュ';
+    url='https://akizukidenshi.com/catalog/g/g115960/';
+    document.getElementById('sot23').style.display = 'inline';
+  }else {
+    document.getElementById('sot23').style.display = 'none';
+  }
+  
+}
+
+// 
+
+checkButton.addEventListener('click', buttonClick);
+
+  </script>
         <h1>使用部品</h1>
         <p3>使用した部品のリンクをまとめました。
         </p>
 <br>
-<a href="https://akizukidenshi.com/catalog/g/g115960/"class="btn btn--yellow btn--cubic">SiCショットキーバリアダイオード 650V6A PCDP0665G1</a>
+<a href="https://akizukidenshi.com/catalog/g/g115960/"class="btn btn--yellow btn--cubic"id="sic">SiCショットキーバリアダイオード 650V6A PCDP0665G1</a>
 <br>
 <a href="https://akizukidenshi.com/catalog/g/g112674/"class="btn btn--yellow btn--cubic">SOT23変換基板 裏面パターン付 金フラッシュ</a>
 <br>
