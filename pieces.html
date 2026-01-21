@@ -51,7 +51,7 @@ function buttonClick(){
     url='https://akizukidenshi.com/catalog/g/g115960/';
     document.getElementById('sic').style.display = 'inline';
     document.getElementById('sicb').style.display = 'inline';
-  }else {
+  }if(!sic.includes(currentValue)) {
     document.getElementById('sic').style.display = 'none';
     document.getElementById('sib').style.display = 'none';
   };
@@ -61,7 +61,7 @@ function buttonClick(){
     url='https://akizukidenshi.com/catalog/g/g115960/';
     document.getElementById('sot23').style.display = 'inline';
     document.getElementById('sot23b').style.display = 'inline';
-  }else {
+  }if(!sot23.includes(currentValue)) {
     document.getElementById('sot23').style.display = 'none';
     document.getElementById('sot23b').style.display = 'none';
   };
@@ -71,7 +71,7 @@ function buttonClick(){
     url='https://akizukidenshi.com/catalog/g/g115960/';
     document.getElementById('mcp1420').style.display = 'inline';
     document.getElementById('mcp1420b').style.display = 'inline';
-  }else {
+  }if(!mcp1420.includes(currentValue)) {
     document.getElementById('mcp1420').style.display = 'none';
     document.getElementById('mcp1420b').style.display = 'none';
   };
