@@ -23,15 +23,14 @@
 <input type="button" value="..." id="checkButton">
 
 </p>　
- <me>Destraction</me>
+ <me>単語検索機能</me>
 
 <p id="dest"></p>
 
 <p id="neikos"></p>
 
-<p id="me13"></p>
 <script>
-const deta="33550336,δ-me13,irontomb,destraction,";
+const sic="sicショットキーバリアダイオード";
     
 let nameText = document.getElementById('nameText');
 
@@ -39,30 +38,23 @@ let neikos = document.getElementById('neikos');
 
 let dest = document.getElementById('dest');
 
-let me13 = document.getElementById('me13');
+
   
 let checkButton = document.getElementById('checkButton');
 
-nameText.value = '全ては徒労...'; // 画面上の■■■■■■■入力欄の■■値を直接■■■設■定
+nameText.value = '検索ワードを入力...'; //
 
 function buttonClick(){
 
   let currentValue = nameText.value;
 
-  if (currentValue === 'Neikos496' || currentValue === '33550336'||currentValue===''||currentValue===''||currentValue===''){
-
-    dest.innerText='全ては徒労';
-     me13.innerText = '';
+  
+  if(currentValue===''){
+    dest.innerText = '';
     neikos.innerText='';
-
-  }else if(currentValue===''){
-    dest.innerText = '';
-    neikos.innerText='NULL';
-    me13.innerText = '';
-  }else if(deta.includes(currentValue)){
-    neikos.innerText ='';
-    dest.innerText = '';
-    me13.innerText = '';
+  }else if(sic.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = 'SiCショットキーバリアダイオード';
 
   }
 
