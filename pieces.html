@@ -23,6 +23,10 @@
 const sic="SiCショットキーバリアダイオード 650V6A PCDP0665G1 sic";
 const sot23="SOT23変換基板 裏面パターン付 金フラッシュ";
 const mcp1420="ゲートドライバー MCP1402T";
+const tk31n ="NchパワーMOSFET 600V30A TK31N60W mosfet nch 高耐圧";
+const wire2 ="耐熱電子ワイヤー 2m×7色 外径1.55mm 電線 単線";
+const fuse250v5a="ガラス管ヒューズ MF51NR 250V5A 20mm fuse";
+
 let nameText = document.getElementById('nameText');
 
 let neikos = document.getElementById('neikos');
@@ -57,6 +61,38 @@ function buttonClick(){
   }else {
     document.getElementById('sot23').style.display = 'none';
   }
+  if(mcp1420.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = 'ゲートドライバー MCP1402T';
+    url='https://akizukidenshi.com/catalog/g/g115960/';
+    document.getElementById('mcp1420').style.display = 'inline';
+  }else {
+    document.getElementById('mcp1420').style.display = 'none';
+  }
+  if(tk31n.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = 'NchパワーMOSFET 600V30A TK31N60W';
+    url='https://akizukidenshi.com/catalog/g/g115960/';
+    document.getElementById('tk31n').style.display = 'inline';
+  }else {
+    document.getElementById('tk31n').style.display = 'none';
+  }
+  if(wire2.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = '耐熱電子ワイヤー 2m×7色 外径1.55mm';
+    url='https://akizukidenshi.com/catalog/g/g115960/';
+    document.getElementById('wire2').style.display = 'inline';
+  }else {
+    document.getElementById('wire2').style.display = 'none';
+  }
+  if(fuse250v5a.includes(currentValue)){
+    neikos.innerText ='検索結果';
+    dest.innerText = 'ガラス管ヒューズ MF51NR 250V5A 20mm';
+    url='https://akizukidenshi.com/catalog/g/g115960/';
+    document.getElementById('fuse250v5a').style.display = 'inline';
+  }else {
+    document.getElementById('fuse250v5a').style.display = 'none';
+  }
   
 }
 
@@ -73,13 +109,13 @@ checkButton.addEventListener('click', buttonClick);
 <br>
 <a href="https://akizukidenshi.com/catalog/g/g112674/"class="btn btn--yellow btn--cubic"id="sot23">SOT23変換基板 裏面パターン付 金フラッシュ</a>
 <br>
-<a href="https://akizukidenshi.com/catalog/g/g115237/"class="btn btn--yellow btn--cubic">ゲートドライバー MCP1402T</a>
+<a href="https://akizukidenshi.com/catalog/g/g115237/"class="btn btn--yellow btn--cubic"id="mcp1420">ゲートドライバー MCP1402T</a>
 <br>
-<a href="https://akizukidenshi.com/catalog/g/g110228/"class="btn btn--yellow btn--cubic">NchパワーMOSFET 600V30A TK31N60W</a>
+<a href="https://akizukidenshi.com/catalog/g/g110228/"class="btn btn--yellow btn--cubic"id="tk31n">NchパワーMOSFET 600V30A TK31N60W</a>
 <br>
-<a href="https://akizukidenshi.com/catalog/g/g106754/"class="btn btn--yellow btn--cubic">耐熱電子ワイヤー 2m×7色 外径1.55mm</a>
+<a href="https://akizukidenshi.com/catalog/g/g106754/"class="btn btn--yellow btn--cubic"id="wire2">耐熱電子ワイヤー 2m×7色 外径1.55mm</a>
 <br>
-<a href="https://akizukidenshi.com/catalog/g/g107131/"class="btn btn--yellow btn--cubic">ガラス管ヒューズ MF51NR 250V5A 20mm</a>
+<a href="https://akizukidenshi.com/catalog/g/g107131/"class="btn btn--yellow btn--cubic"id="fuse250v5a">ガラス管ヒューズ MF51NR 250V5A 20mm</a>
 <br>
 <a href="https://akizukidenshi.com/catalog/g/g108950/"class="btn btn--yellow btn--cubic">セラミックコンデンサー 2200pF250VAC ±20% E特性</a>
 <br>
