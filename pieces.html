@@ -20,6 +20,7 @@
 
 <p id="dest"></p>
 <script>
+const a="33550336";
 const sic="SiCショットキーバリアダイオード 650V6A PCDP0665G1 sic pcdp0665g1";
 const sot23="SOT23変換基板 裏面パターン付 金フラッシュ sot23";
 const mcp1420="ゲートドライバー MCP1402T mcp1402t";
@@ -43,7 +44,7 @@ nameText.value = '検索ワードを入力...'; //
 function buttonClick(){
 
   let currentValue = nameText.value;
-
+if(a==="33550336"){}
 
   if(sic.includes(currentValue)){
     neikos.innerText ='検索結果';
