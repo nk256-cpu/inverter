@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電子部品データ JSONジェネレーター（管理者用）</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #2d3748;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: #fff;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        input[type="text"], input[type="password"], select {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: #3182ce;
+        }
+        .help-text {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+        button {
+            padding: 14px 24px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2b6cb0;
+        }
+        .generate-btn {
+            background-color: #38a169;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .generate-btn:hover {
+            background-color: #2f855a;
+        }
+        /* 認証まわり */
+        .auth-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .pw-hint {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 20px;
+        }
+        /* 結果表示エリア */
+        .result-box {
+            margin-top: 30px;
+            background: #1a202c;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .result-box h3 {
+            margin: 0 0 10px 0;
+            color: #edf2f7;
+            font-size: 14px;
+        }
+        pre {
+            margin: 0;
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 6px;
+            color: #63b3ed;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .copy-btn {
+            margin-top: 12px;
+            width: 100%;
+            background-color: #4a5568;
+        }
+        .copy-btn:hover {
+            background-color: #2d3748;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔌 部品データ JSONジェネレーター</h1>
+    <div class="subtitle">データベース（componentDB）に挿入するコードを自動生成します</div>
+
+    <!-- パスワード認証（GitHub安全仕様） -->
+    <div id="loginArea">
+        <div class="auth-box">
+            <input type="password" id="adminPass" placeholder="管理用パスワードを入力（初回入力値が登録されます）">
+            <button onclick="checkAuth()">ロック解除</button>
+        </div>
+        <div class="pw-hint">※コード内にパスワードは保存されません。ブラウザにのみ安全に記憶されます。</div>
+    </div>
+
+    <!-- メインフォーム（認証後に表示） -->
+    <div id="mainForm" class="form-vertical hidden">
+        
+        <div class="form-row">
+            <label for="partKey">① 検索用キー (小文字・スペースなし)</label>
+            <input type="text" id="partKey" placeholder="例: 2sc1815, ne555, 74hc595" oninput="sanitizeKey(this)">
+            <div class="help-text">※大文字で入力しても自動的に小文字に変換され、スペースは除去されます。</div>
+        </div>
+
+        <div class="form-row">
+            <label for="partName">② 表示名</label>
+            <input type="text" id="partName" placeholder="例: 2SC1815, NE555 (タイマーIC)">
+        </div>
+
+        <div class="form-row">
+            <label for="pdfUrl">③ データシート PDF直リンクURL (任意)</label>
+            <input type="text" id="pdfUrl" placeholder="https://akizukidenshi.com/goodsaffix/...">
+        </div>
+
+        <div class="form-row">
+            <label for="partType">④ 部品タイプ（JIS記号割り当て）</label>
+            <select id="partType" onchange="onTypeChange()">
+                <option value="transistor_npn">トランジスタ (NPN型)</option>
+                <option value="transistor_pnp">トランジスタ (PNP型)</option>
+                <option value="diode">ダイオード</option>
+                <option value="led">発光ダイオード (LED)</option>
+                <option value="resistor">抵抗器</option>
+                <option value="capacitor">コンデンサ</option>
+                <option value="ic_3pin">3端子IC (レギュレータなど)</option>
+                <option value="ic_multi">多ピンIC (ロジック・マイコンなど)</option>
+            </select>
+        </div>
+
+        <div class="form-row hidden" id="pinRow">
+            <label for="pinCount">④-2 ICのピン数</label>
+            <input type="text" id="pinCount" value="8" placeholder="例: 8, 14, 16">
+        </div>
+
+        <button class="generate-btn" onclick="generateJsonRow()">✨ JSONコードを生成</button>
+
+        <!-- 出力エリア -->
+        <div id="outputArea" class="result-box hidden">
+            <h3>生成されたコード（この1行を componentDB の中にコピー＆ペーストしてください）</h3>
+            <pre id="jsonResult"></pre>
+            <button class="copy-btn" onclick="copyToClipboard()">📋 クリップボードにコピー</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 認証処理（LocalStorageを活用してGitHub対策）
+    function checkAuth() {
+        const passInput = document.getElementById("adminPass").value.trim();
+        if(!passInput) {
+            alert("パスワードを入力してください。");
+            return;
+        }
+
+        let savedPassword = localStorage.getItem("generator_password");
+        if (!savedPassword) {
+            localStorage.setItem("generator_password", passInput);
+            savedPassword = passInput;
+            alert("パスワードを初期登録しました！");
+        }
+
+        if (passInput === savedPassword) {
+            document.getElementById("loginArea").classList.add("hidden");
+            document.getElementById("mainForm").classList.remove("hidden");
+        } else {
+            alert("パスワードが違います。");
+        }
+    }
+
+    // 検索キーの自動クレンジング（小文字化＆スペース排除）
+    function sanitizeKey(input) {
+        input.value = input.value.toLowerCase().replace(/\s+/g, '');
+    }
+
+    // 部品タイプ変更時にピン数入力を出すかどうか
+    function onTypeChange() {
+        const type = document.getElementById("partType").value;
+        const pinRow = document.getElementById("pinRow");
+        if (type === "ic_multi") {
+            pinRow.classList.remove("hidden");
+        } else {
+            pinRow.classList.add("hidden");
+        }
+    }
+
+    // 本題：指定されたフォーマットのテキストを生成する
+    function generateJsonRow() {
+        const key = document.getElementById("partKey").value.trim();
+        const name = document.getElementById("partName").value.trim();
+        const pdf = document.getElementById("pdfUrl").value.trim();
+        const type = document.getElementById("partType").value;
+
+        if (!key || !name) {
+            alert("「検索用キー」と「表示名」は必須項目です。");
+            return;
+        }
+
+        // 基本構造の作成
+        let data = {
+            name: name,
+            isIC: false
+        };
+
+        // ICかどうかの判定と分岐
+        if (type === "ic_3pin") {
+            data.isIC = true;
+            data.pins = 3;
+            data.label = "IC";
+        } else if (type === "ic_multi") {
+            data.isIC = true;
+            data.pins = parseInt(document.getElementById("pinCount").value) || 8;
+            data.label = "IC";
+        } else {
+            data.type = type;
+        }
+
+        // PDFの有無
+        data.directPdf = pdf ? pdf : null;
+        
+        // 秋月検索用ワード（表示名から補足カッコ等を除いたもの、または表示名そのもの）
+        data.akizukiSearch = name.split("(")[0].trim();
+
+        // オブジェクトをシリアライズするが、JSON.stringifyだと綺麗な1行に並びにくい、
+        // かつ `directPdf: null` のときにそのまま文字列として `null` を出したいのでカスタムで組み立て
+        let jsonLine = `"${key}": { ` +
+            `name: "${data.name}", ` +
+            `isIC: ${data.isIC}, ` +
+            (data.pins ? `pins: ${data.pins}, ` : "") +
+            (data.label ? `label: "${data.label}", ` : "") +
+            (!data.isIC ? `type: "${data.type}", ` : "") +
+            `directPdf: ${data.directPdf ? `"${data.directPdf}"` : "null"}, ` +
+            `akizukiSearch: "${data.akizukiSearch}" ` +
+        `},`;
+
+        // 結果を表示
+        document.getElementById("jsonResult").innerText = jsonLine;
+        document.getElementById("outputArea").classList.remove("hidden");
+    }
+
+    // クリップボードへのコピー機能
+    function copyToClipboard() {
+        const text = document.getElementById("jsonResult").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("コードをクリップボードにコピーしました！\n検索システムの componentDB 内にペーストしてください。");
+        }).catch(err => {
+            alert("コピーに失敗しました。枠内の文字を手動で選択してコピーしてください。");
+        });
+    }
+</script>
+
+</body>
+</html>
