@@ -478,4 +478,138 @@
 
     function generateJisIcSvg(pins, label) {
         if (pins === 3) {
-            return `<svg class="symbol-svg" viewBox="0 0 100 100"><rect x="25" y="25" width="50" height="50" fill="none" stroke="#000" stroke-width="2.5"/><text x="50" y="54" font-size="12" font-family="san
+            return `<svg class="symbol-svg" viewBox="0 0 100 100"><rect x="25" y="25" width="50" height="50" fill="none" stroke="#000" stroke-width="2.5"/><text x="50" y="54" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">${label}</text><line x1="5" y1="40" x2="25" y2="40" stroke="#000" stroke-width="2"/><line x1="5" y1="60" x2="25" y2="60" stroke="#000" stroke-width="2"/><line x1="75" y1="50" x2="95" y2="50" stroke="#000" stroke-width="2"/></svg>`;
+        }
+        const pinsPerSide = Math.ceil(pins / 2);
+        const boxWidth = 50, boxHeight = 140, boxX = 25, boxY = 30;
+        let svgLines = "";
+        const step = boxHeight / (pinsPerSide + 1);
+        for (let i = 1; i <= pinsPerSide; i++) {
+            const yPosition = boxY + (i * step);
+            svgLines += `<line x1="5" y1="${yPosition}" x2="${boxX}" y2="${yPosition}" stroke="#000" stroke-width="2" stroke-linecap="round"/>`;
+            svgLines += `<line x1="${boxX + boxWidth}" y1="${yPosition}" x2="95" y2="${yPosition}" stroke="#000" stroke-width="2" stroke-linecap="round"/>`;
+        }
+        return `<svg class="symbol-svg" viewBox="0 0 100 200"><rect x="${boxX}" y="${boxY}" width="${boxWidth}" height="${boxHeight}" fill="none" stroke="#000" stroke-width="2.5"/><text x="50" y="${boxY + (boxHeight/2) + 4}" font-size="10" font-family="sans-serif" text-anchor="middle" font-weight="bold">${label}</text>${svgLines}</svg>`;
+    }
+
+    function searchViaPrompt() {
+        let input = prompt("電子部品名または型番を入力してください:");
+        if (input) {
+            document.getElementById("compInput").value = input;
+            displayComponent(input);
+        }
+    }
+
+    function searchViaInput() {
+        let input = document.getElementById("compInput").value;
+        displayComponent(input);
+    }
+
+    function displayComponent(keyword) {
+        let query = keyword.trim();
+        if (!query) return;
+
+        let key = query.toLowerCase();
+        const resultCard = document.getElementById("resultCard");
+        const titleArea = document.getElementById("resultTitle");
+        const statusTitle = document.getElementById("symbolStatusTitle");
+        const container = document.getElementById("symbolContainer");
+        const guidanceBox = document.getElementById("guidanceBox");
+        
+        const linkDirectPdf = document.getElementById("linkDirectPdf");
+        const linkAkizuki = document.getElementById("linkAkizuki");
+        const linkMouser = document.getElementById("linkMouser");
+        const linkDigikey = document.getElementById("linkDigikey");
+
+        guidanceBox.className = "info-msg-box"; 
+        linkDirectPdf.style.display = "none"; 
+
+        let component = componentDB[key];
+
+        if (!component) {
+            for (let dbKey in componentDB) {
+                if (key.includes(dbKey) || dbKey.includes(key)) {
+                    component = componentDB[dbKey];
+                    break;
+                }
+            }
+        }
+
+        if (component && component.alias) {
+            component = componentDB[component.alias];
+        }
+
+        const encodedQuery = encodeURIComponent(query);
+        let akizukiUrl = `https://akizukidenshi.com/catalog/goods/search.aspx?search=x&keyword=${encodedQuery}`;
+        let mouserUrl = `https://www.mouser.jp/c/?q=${encodedQuery}`;
+        let digikeyUrl = `https://www.digikey.jp/ja/products?keywords=${encodedQuery}`;
+
+        if (component) {
+            titleArea.innerText = `${component.name} の検索結果`;
+            statusTitle.style.borderLeftColor = "#3182ce";
+            
+            if (component.isIC) {
+                statusTitle.innerText = `JIS C 0617 準拠 回路記号 (${component.pins}ピン仕様)`;
+                container.innerHTML = generateJisIcSvg(component.pins, component.label);
+            } else {
+                statusTitle.innerText = "JIS C 0617 準拠 回路記号";
+                container.innerHTML = fixedSvgs[component.type];
+            }
+
+            if (component.directPdf) {
+                linkDirectPdf.href = component.directPdf;
+                linkDirectPdf.innerText = `📄 「${component.name}」追加済みデータシート(PDF)を直接開く`;
+                linkDirectPdf.style.display = "flex";
+            }
+
+            const searchWord = component.akizukiSearch || component.name;
+            akizukiUrl = `https://akizukidenshi.com/catalog/goods/search.aspx?search=x&keyword=${encodeURIComponent(searchWord)}`;
+            
+            guidanceBox.innerHTML = `
+                <strong>💡 照合ガイド（秋月電子）</strong><br>
+                リスト登録済みのパーツです。登録されたPDFがある場合は緑のボタンから直行できます。<br>
+                下の各サイト検索からジャンプした場合は、<strong>「サイトのタイトル（商品名）」</strong>が「<code>${component.name}</code>」と合致しているか確認してください。
+            `;
+
+            linkAkizuki.innerText = `秋月電子で「${component.name}」の商品ページを確認`;
+            linkMouser.innerText = `Mouserで「${component.name}」を検索`;
+            linkDigikey.innerText = `DigiKeyで「${component.name}」を検索`;
+
+        } else {
+            titleArea.innerText = `${query} (未登録部品)`;
+            statusTitle.innerText = "回路記号を表示できません";
+            statusTitle.style.borderLeftColor = "#dd6b20";
+            
+            container.innerHTML = fixedSvgs["unknown_error"];
+            guidanceBox.classList.add("warn-style");
+            
+            guidanceBox.innerHTML = `
+                <strong>⚠️ 重要：秋月電子の「サイトのタイトル」を確認してください</strong><br>
+                この型番はまだリストに登録されていません。<br><br>
+                <strong>【確認手順】</strong><br>
+                1. 下の青いボタンから秋月電子の検索画面を開きます。<br>
+                2. ヒットしたページの<strong>「サイトのタイトル（商品名）」が、探している「${query}」と一致しているか</strong>を確認してください。<br>
+                3. 正しいパーツであれば、ページ内のデータシートURLを取得し、下の管理パネルから追加登録が可能です。
+            `;
+            
+            linkAkizuki.innerText = `秋月電子で「${query}」のタイトル・仕様を確認`;
+            linkMouser.innerText = `Mouserで「${query}」を検索・確認`;
+            linkDigikey.innerText = `DigiKeyで「${query}」を検索・確認`;
+        }
+
+        linkAkizuki.href = akizukiUrl;
+        linkMouser.href = mouserUrl;
+        linkDigikey.href = digikeyUrl;
+
+        resultCard.style.display = "block";
+    }
+
+    document.getElementById("compInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            searchViaInput();
+        }
+    });
+</script>
+
+</body>
+</html>
