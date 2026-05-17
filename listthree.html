@@ -43,6 +43,32 @@
             gap: 10px;
             margin-bottom: 20px;
         }
+        /* パスワード入力エリア用の特殊な配置 */
+        .password-toggle-box {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+        .password-toggle-box input {
+            padding-right: 45px; /* ボタンが重ならないように右側に余白を確保 */
+        }
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #718096;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px;
+            font-weight: normal;
+            user-select: none;
+        }
+        .toggle-btn:hover {
+            background: none;
+            color: #4a5568;
+        }
         .form-vertical {
             display: flex;
             flex-direction: column;
@@ -282,17 +308,22 @@
     <div class="admin-panel">
         <div id="authBox" class="auth-container">
             <div class="search-box" style="margin-bottom: 0;">
-                <input type="password" id="adminPass" placeholder="管理用パスワードを入力">
+                <!-- 🛠️ 切り替えボタン付きのコンテナに変更 -->
+                <div class="password-toggle-box">
+                    <input type="password" id="adminPass" placeholder="管理用パスワードを入力">
+                    <button type="button" class="toggle-btn" onclick="togglePasswordVisibility()">👁️ 表示</button>
+                </div>
                 <button class="admin-btn" onclick="unlockAdminPanel()">ロック解除</button>
             </div>
-            <!-- ヒント設定用の入力欄（初回のみJavaScriptで自動制御されます） -->
+            
+            <!-- ヒント設定用の入力欄 -->
             <div id="firstTimeSetup" class="form-vertical" style="display: none; margin-top: 10px; background: #ebf8ff; padding: 15px; border-radius: 8px; border: 1px solid #bee3f8;">
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #2b6cb0; font-weight: bold;">【初回設定】パスワードと同時に「ヒント」を登録してください</p>
                 <input type="text" id="adminHintInput" placeholder="パスワードのヒント（例：実家のペットの名前、お気に入りの型番など）">
             </div>
         </div>
         
-        <!-- 動的に変化するヒントメッセージエリア -->
+        <!-- ヒントメッセージエリア -->
         <div id="pwHintMessage" class="pw-hint-area">
             Loading...
         </div>
@@ -368,7 +399,6 @@
     componentDB["発光ダイオード"] = { alias: "led" };
     componentDB["キャパシタ"] = { alias: "コンデンサ" };
 
-    // 画面読み込み時に初期登録状況を確認してヒントUIを制御
     window.addEventListener("DOMContentLoaded", () => {
         const savedPassword = localStorage.getItem("app_admin_password");
         const hintMessageArea = document.getElementById("pwHintMessage");
@@ -384,6 +414,20 @@
         }
     });
 
+    // 🛠️ パスワードの表示・非表示を切り替える関数
+    function togglePasswordVisibility() {
+        const passInput = document.getElementById("adminPass");
+        const toggleBtn = document.querySelector(".toggle-btn");
+        
+        if (passInput.type === "password") {
+            passInput.type = "text";
+            toggleBtn.innerText = "🔒 非表示";
+        } else {
+            passInput.type = "password";
+            toggleBtn.innerText = "👁️ 表示";
+        }
+    }
+
     function unlockAdminPanel() {
         const passInput = document.getElementById("adminPass").value.trim();
         if (!passInput) {
@@ -393,7 +437,6 @@
 
         let savedPassword = localStorage.getItem("app_admin_password");
 
-        // 初回登録時の処理
         if (!savedPassword) {
             const hintInput = document.getElementById("adminHintInput").value.trim();
             if (!hintInput) {
@@ -405,11 +448,10 @@
             localStorage.setItem("app_admin_hint", hintInput);
             savedPassword = passInput;
             alert("✨ パスワードとヒントの初期登録が完了しました！");
-            location.reload(); // ヒント表示を更新するためにリロード
+            location.reload();
             return;
         }
 
-        // 2回目以降の認証処理
         if (passInput === savedPassword) {
             document.getElementById("authBox").style.display = "none";
             document.getElementById("insertFormBox").style.display = "flex";
@@ -445,7 +487,7 @@
         const typeSelect = document.getElementById("newType").value;
         
         if (!key || !name) {
-            alert("「検索用型番」と「表示名」は入力必須です。");
+  alert("「検索用型番」と「表示名」は入力必須です。");
             return;
         }
 
