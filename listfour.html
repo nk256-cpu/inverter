@@ -373,8 +373,24 @@
         </div>
     </div>
 </div>
+<h2>このボタンを何回も押すと…？</h2>
+<button class="submit-btn" onclick='oc()'>Click me (Count: <span id="counter">0</span>)</button>
 
 <script>
+let i = 0;
+
+  function oc() {
+    i++;
+    
+    if (i > 30) {
+      document.body.innerHTML = '<h1></h1>';
+    } else {
+      // Update the UI to show the current count
+      document.getElementById('counter').innerText = i;
+      console.log("回数" + i + " times");
+alert('何も起きるわけないやん、(笑)')
+    }
+  }
     // JIS固定SVGテンプレート
     const fixedSvgs = {
         resistor: `<svg class="symbol-svg" viewBox="0 0 100 100"><line x1="10" y1="50" x2="30" y2="50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/><rect x="30" y="42" width="40" height="16" fill="none" stroke="#000" stroke-width="2.5"/><line x1="70" y1="50" x2="90" y2="50" stroke="#000" stroke-width="2.5" stroke-linecap="round"/></svg>`,
