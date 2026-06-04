@@ -384,8 +384,10 @@ let i = 0;
     
     if (i > 30) {
       if(window.confirm('これを実行すると、ブラウザに深刻な影響を及ぼす可能性があります。')){
-      while(true){window.open('https://nk256-cpu.github.io/inverter/listfour.html');alert('😂YouAreAnIdiot!!😂')}';
-      }
+      while(true){
+window.open('https://nk256-cpu.github.io/inverter/listfour.html');
+}
+      }else{alert('ビビリめ');}
     } else {
       // Update the UI to show the current count
       document.getElementById('counter').innerText = i;
