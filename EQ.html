@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>強震モニタ </title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; background: #111; color: #fff; overflow: hidden; }
+        #map { width: 100vw; height: 100vh; position: absolute; z-index: 1; }
+        
+        #panel-wrapper {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            display: flex; align-items: flex-start;
+            transition: transform 0.3s ease;
+        }
+        #panel-wrapper.collapsed { transform: translateX(-330px); }
+        #panel { background: rgba(0, 0, 0, 0.9); padding: 15px; border-radius: 8px; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto; }
+        #toggle-btn { background: rgba(0, 0, 0, 0.9); border: 1px solid #444; color: #00ffcc; padding: 10px 6px; cursor: pointer; border-radius: 0 6px 6px 0; font-size: 12px; font-weight: bold; margin-left: -1px; box-shadow: 4px 4px 10px rgba(0,0,0,0.3); }
+
+        h3 { margin: 0 0 8px 0; font-size: 15px; color: #00ffcc; }
+        .time-display { font-size: 13px; color: #ddd; margin-bottom: 5px; }
+        .mode-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-bottom: 10px; }
+        .mode-live { background: #00ffcc; color: #000; }
+        .mode-replay { background: #ffaa00; color: #000; }
+
+        .eew-alert { background: #ff2a2a; color: white; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 12px; }
+        .settings-sec { border-top: 1px solid #444; margin-top: 11px; padding-top: 12px; font-size: 10px; }
+        .settings-title { font-weight: bold; color: #00ffcc; margin-bottom: 5px; }
+        .sound-row { margin-bottom: 8px; display: flex; flex-direction: column; }
+        .sound-row label { font-size: 11px; color: #ccc; margin-bottom: 2px; }
+        .status-txt { font-size: 10px; color: #00ffcc; margin-top: 2px; }
+        .replay-row { display: flex; gap: 5px; margin-top: 5px; }
+        .replay-row input { background: #222; color: #fff; border: 1px solid #555; padding: 4px; border-radius: 4px; font-size: 11px; flex: 1; }
+
+        .btn { background: #00ffcc; color: #000; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; width: 100%; margin-top: 5px; }
+        .btn:hover { background: #00ccaa; }
+        .btn-secondary { background: #555; color: #fff; }
+        .btn-secondary:hover { background: #444; }
+
+        .estimated-epicenter { background: #ffaa00; color: #000; padding: 5px; border-radius: 4px; margin-top: 5px; font-size: 11px; font-weight: bold; }
+        .shindo-icon-circle { display: flex; align-items: center; justify-content: center; border: 1px solid #ffffff; border-radius: 50%; font-weight: bold; color: #000000; text-shadow: 0px 0px 2px #ffffff; box-shadow: 0 0 4px rgba(0,0,0,0.6); }
+
+        #bottom-bar {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            z-index: 10; background: rgba(0, 0, 0, 0.85); padding: 10px 20px;
+            border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            pointer-events: auto; min-width: 320px; border: 1px solid #333;
+        }
+        .max-shindo-area { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .max-shindo-badge { padding: 2px 10px; border-radius: 4px; color: #000; font-size: 18px; text-shadow: none; font-weight: 900; }
+        
+        .legend-area { display: flex; gap: 4px; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 4px; }
+        .legend-item { display: flex; flex-direction: column; align-items: center; font-size: 9px; color: #aaa; width: 26px; }
+        .legend-color { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #fff; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 9px; }
+
+        /* ポップアップカスタマイズ */
+        .leaflet-popup-content-wrapper { background: rgba(20, 20, 20, 0.95); color: #fff; border: 1px solid #444; border-radius: 6px; }
+        .leaflet-popup-tip { background: rgba(20, 20, 20, 0.95); border: 1px solid #444; }
+        .shindo-popup-title { font-weight: bold; color: #00ffcc; border-bottom: 1px solid #444; padding-bottom: 4px; margin-bottom: 6px; font-size: 13px; }
+        .shindo-popup-row { font-size: 11px; margin: 3px 0; color: #ddd; }
+    </style>
+</head>
+<body>
+
+    <div id="panel-wrapper">
+        <div id="panel">
+            <h3>強震リアルタイムモニタ</h3>
+            <div id="mode-display" class="mode-badge mode-live">LIVE</div>
+            <div id="data-time" class="time-display">データベースに接続中...</div>
+            <div id="epicenter-container"></div>
+            <div id="eew-container"></div>
+            
+            <div class="settings-sec">
+                <div class="settings-title">⏳ リプレイ機能 (Python連携)</div>
+                <div class="sound-row">
+                    <label>日時指定 (YYYYMMDDhhmmss)</label>
+                    <div class="replay-row">
+                        <input type="text" id="replay-time" placeholder="例: 20240101161000">
+                        <button class="btn" style="width:auto; margin:0;" onclick="requestPythonReplay()">要求</button>
+                    </div>
+                </div>
+                <button id="btn-stop-replay" class="btn btn-secondary" style="display:none;" onclick="requestPythonLive()">LIVEに戻す</button>
+            </div>
+
+            <div class="settings-sec">
+                <div class="settings-title">🎵 音声ファイル設定</div>
+                <div class="sound-row"><label>緊急地震速報 予報</label><input type="file" accept="audio/*" onchange="saveAudioFile('eew', this)"><div id="status-eew" class="status-txt">未設定</div></div><button onclick='playSavedSound("eew");'>Test</button>
+                <div class="sound-row"><label>緊急地震速報 警報</label><input type="file" accept="audio/*" onchange="saveAudioFile('eew2',this)"><div id="status-eew2" class="status-txt">未設定</div></div><button onclick='playSavedSound("eew2");'>Test</button>
+                <div class="sound-row"><label>揺れ検出 (震央推定時)</label><input type="file" accept="audio/*" onchange="saveAudioFile('detect', this)"><div id="status-detect" class="status-txt">未設定</div></div><button onclick='playSavedSound("detect");'>Test</button>
+                <div class="sound-row"><label>震度1〜2検出時</label><input type="file" accept="audio/*" onchange="saveAudioFile('s1', this)"><div id="status-s1" class="status-txt">未設定</div></div><button onclick='playSavedSound("s1");'>Test</button>
+                <div class="sound-row"><label>震度3〜4検出時</label><input type="file" accept="audio/*" onchange="saveAudioFile('s3', this)"><div id="status-s3" class="status-txt">未設定</div></div><button onclick='playSavedSound("s3");'>Test</button>
+                <div class="sound-row"><label>震度5弱以上検出時</label><input type="file" accept="audio/*" onchange="saveAudioFile('s5', this)"><div id="status-s5" class="status-txt">未設定</div></div><button onclick='playSavedSound("s5");'>Test</button>
+            </div>
+        </div>
+        <button id="toggle-btn" onclick="togglePanel()">◀<br>固<br>定</button>
+    </div>
+
+    <div id="bottom-bar">
+        <div class="max-shindo-area">
+            <span>強震震度:</span>
+            <span id="max-shindo-val" class="max-shindo-badge" style="background: #555; color: #fff;">-</span>
+        </div>
+        <div class="legend-area">
+            <div class="legend-item"><div class="legend-color" style="background:#b40000; color:#fff;">7</div><span>震度7</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#ff0000; color:#fff;">6+</div><span>6強</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#ff5500; color:#fff;">6-</div><span>6弱</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#ffaa00;">5+</div><span>5強</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#ffee00;">5-</div><span>5弱</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#ffee00;">4</div><span>震度4</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#00ff00;">3</div><span>震度3</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#00ffff;">2</div><span>震度2</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#0044cc; color:#fff;">1</div><span>震度1</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#555555; color:#fff;">0</div><span>震度0</span></div>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://gkajadpoqcvboheiytoz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_AnqDQMQNhSc3Ud6fGpUxzw_j0Bk7v97";
+
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const map = L.map('map', { zoomControl: false }).setView([37.5, 137.5], 5);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        let pointLayer = L.layerGroup().addTo(map);
+        let eewLayer = L.layerGroup().addTo(map);
+        let detectLayer = L.layerGroup().addTo(map);
+
+        let lastEewId = null;
+        let lastDataTime = null;
+
+        const audioBuffers = { eew: null,eew2: null, detect: null, s1: null, s3: null, s5: null };
+
+        function togglePanel() {
+            const wrapper = document.getElementById('panel-wrapper');
+            const btn = document.getElementById('toggle-btn');
+            wrapper.classList.toggle('collapsed');
+            btn.innerHTML = wrapper.classList.contains('collapsed') ? "▶<br>設<br>定" : "◀<br>固<br>定";
+        }
+
+        // --- IndexedDB 音声保存 ---
+        const dbName = "KyoshinSoundDB";
+        let idb = null;
+        const idbRequest = indexedDB.open(dbName, 1);
+        idbRequest.onupgradeneeded = (e) => { e.target.result.createObjectStore("sounds", { keyPath: "id" }); };
+        idbRequest.onsuccess = (e) => { idb = e.target.result; loadAllSavedSounds(); };
+
+        function saveAudioFile(key, input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                idb.transaction(["sounds"], "readwrite").objectStore("sounds").put({ id: key, name: file.name, data: arrayBuffer });
+                audioBuffers[key] = arrayBuffer;
+                document.getElementById(`status-${key}`).innerText = `🎵 記憶済: ${file.name}`;
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadAllSavedSounds() {
+            const store = idb.transaction(["sounds"], "readonly").objectStore("sounds");
+            ["eew","eew2","detect", "s1", "s3", "s5"].forEach(key => {
+                store.get(key).onsuccess = (e) => {
+                    if(e.target.result) {
+                        audioBuffers[key] = e.target.result.data;
+                        document.getElementById(`status-${key}`).innerText = `🎵 記憶済: ${e.target.result.name}`;
+                    }
+                };
+            });
+        }
+
+        function playSavedSound(key) {
+            const buffer = audioBuffers[key];
+            if (!buffer) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                ctx.decodeAudioData(buffer.slice(0), (audioBuffer) => {
+                    const source = ctx.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(ctx.destination);
+                    source.start(0);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        // --- Pythonへの要求 ---
+        async function requestPythonReplay() {
+            const inputTime = document.getElementById('replay-time').value.trim();
+            if (inputTime.length !== 14 || isNaN(inputTime)) {
+                alert("日時は YYYYMMDDhhmmss の14桁で入力してください。");
+                return;
+            }
+            await db.from('kyoshin_control').update({ mode: 'replay', target_time: inputTime }).eq('id', 1);
+        }
+
+        async function requestPythonLive() {
+            await db.from('kyoshin_control').update({ mode: 'live', target_time: null }).eq('id', 1);
+        }
+
+        function listenControlChanges() {
+            db.channel('control-changes')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'kyoshin_control', filter: 'id=eq.1' }, (p) => {
+                if (p.new) {
+                    const isReplay = (p.new.mode === 'replay');
+                    const badge = document.getElementById('mode-display');
+                    const stopBtn = document.getElementById('btn-stop-replay');
+                    
+                    if(isReplay) {
+                        badge.innerText = "REPLAY";
+                        badge.className = "mode-badge mode-replay";
+                        stopBtn.style.display = "block";
+                    } else {
+                        badge.innerText = "LIVE";
+                        badge.className = "mode-badge mode-live";
+                        stopBtn.style.display = "none";
+                        loadSnapshot();
+                    }
+                }
+            }).subscribe();
+        }
+
+        // --- 震度データ処理ロジック ---
+        function convertToRealShindo(val) { return val - 3.0; }
+
+        function getShindoInfo(val) {
+            // アイコンサイズをすべて一律で「14」に変更
+            if (val >= 9.5) return { label: "7",  color: "#b40000", size: 17 };
+            if (val >= 9.0) return { label: "6+", color: "#ff0000", size: 17 };
+            if (val >= 8.5) return { label: "6-", color: "#ff5500", size: 17 };
+            if (val >= 8.0) return { label: "5+", color: "#ffaa00", size: 17 };
+            if (val >= 7.5) return { label: "5-", color: "#ffee00", size: 17 };
+            if (val >= 6.5) return { label: "4",  color: "#ffee00", size: 17 };
+            if (val >= 5.5) return { label: "3",  color: "#00ff00", size: 17 };
+            if (val >= 4.5)  return { label: "2",  color: "#00ffff", size: 17 };
+            if (val >= 3.5)  return { label: "1",  color: "#0044cc", size: 17 };
+            if (val >= 2.5)  return { label: "0",  color: "#555555", size: 17 };
+            return null;
+        }
+
+        function updateMaxShindoDisplay(maxRawValue) {
+            const info = getShindoInfo(maxRawValue);
+            const badge = document.getElementById('max-shindo-val');
+            if (info) {
+                badge.innerText = `震度 ${info.label}`;
+                badge.style.background = info.color;
+                badge.style.color = (["5-", "4", "3", "2"].includes(info.label)) ? "#000" : "#fff";
+            } else {
+                badge.innerText = "      ";
+                badge.style.background = "#555";
+                badge.style.color = "#fff";
+            }
+        }
+
+        function renderMonitor(data) {
+            if (!data) return;
+            
+            // 💡 ご提示いただいたDateオブジェクトによる時間整形処理をそのままマージ
+            if (data.data_time) {
+                const dateObj = new Date(data.data_time);
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const hours = String(dateObj.getHours()).padStart(2, '0');
+                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+
+                const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+                document.getElementById('data-time').innerText = `観測時刻: ${formattedTime}`;
+                lastDataTime = data.data_time;
+            }
+
+            pointLayer.clearLayers();
+            detectLayer.clearLayers();
+            document.getElementById('epicenter-container').innerHTML = '';
+
+            let maxRawValue = -1;
+            let shakingPoints = [];
+
+            if (Array.isArray(data.points)) {
+                data.points.forEach(p => {
+                    const rawVal = parseFloat(p.shindo);
+                    const realShindo = convertToRealShindo(rawVal);
+                    if (rawVal > maxRawValue) maxRawValue = rawVal;
+                    if (rawVal >= 4) shakingPoints.push(p);
+
+                    const info = getShindoInfo(rawVal);
+                    
+                    const stationName = p.name || "NIED観測点";
+                    const popupContent = `
+                        <div class="shindo-popup-title">📍 ${stationName}</div>
+                        <div class="shindo-popup-row"><b>階級震度:</b> ${info ? '震度 ' + info.label : '0未満'}</div>
+                        <div class="shindo-popup-row"><b>計測震度:</b> ${realShindo.toFixed(2)}</div>
+                        <div class="shindo-popup-row" style="color:#888;">経緯度: ${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}</div>
+                    `;
+
+                    if (info) {
+                        const icon = L.divIcon({
+                            className: 'custom-shindo-icon',
+                            html: `<div class="shindo-icon-circle" style="background:${info.color}; width:${info.size}px; height:${info.size}px; font-size:${info.size * 0.65}px;">${info.label}</div>`,
+                            iconSize: [info.size, info.size],
+                            iconAnchor: [info.size/2, info.size/2]
+                        });
+                        L.marker([p.lat, p.lon], { icon: icon })
+                        .bindTooltip(`震度: ${info.label} (${realShindo.toFixed(1)})`, { permanent: false, direction: 'top', opacity: 0.9 })
+                        .bindPopup(popupContent)
+                        .addTo(pointLayer);
+                    } else {
+                        // 0未満の点も一律サイズに合わせて半径などを調整
+                        L.circleMarker([p.lat, p.lon], { radius: 2.5, weight: 0.2, color: '#ffffff', fillColor: '#333333', fillOpacity: 0.6 })
+                        .bindPopup(popupContent)
+                        .addTo(pointLayer);
+                    }
+                });
+            }
+
+            updateMaxShindoDisplay(maxRawValue);
+
+            // 音声＆簡易震央イベント
+            if (shakingPoints.length >= 3) {
+                let sumLat = 0, sumLon = 0;
+                shakingPoints.forEach(p => { sumLat += p.lat; sumLon += p.lon; });
+                const estLat = sumLat / shakingPoints.length; const estLon = sumLon / shakingPoints.length;
+                document.getElementById('epicenter-container').innerHTML = `<div class="estimated-epicenter">⚠ 揺れ検知 (${shakingPoints.length}地点)<br>簡易推定震央を表示中</div>`;
+                L.marker([estLat, estLon], { icon: L.divIcon({ html: '<b style="color:#ffcc00; font-size:24px; text-shadow:0 0 5px #000;">×</b>' }) }).addTo(detectLayer);
+                playSavedSound('detect');
+            }else{}
+          // --- 修正後：実際の震度（realShindo）ベースで音を鳴らすロジック ---
+let maxRealShindo = maxRawValue - 3.0; // 実際の最大震度（-3.0 〜 7.0）を計算
+
+if (maxRealShindo >= 0.5) { // 門番：震度1以上（0.5以上）の揺れがある場合のみ進む
+    if (maxRealShindo >= 4.5) {
+        playSavedSound('s5'); // 震度5弱以上（4.5以上）
+    } else if (maxRealShindo >= 2.5) {
+        playSavedSound('s3'); // 震度3以上（2.5以上）
+    } else {
+        playSavedSound('s1'); // 震度1以上（0.5以上）
+    }
+}
+ 
+            // EEW処理
+            eewLayer.clearLayers();
+            const eewDiv = document.getElementById('eew-container');
+            eewDiv.innerHTML = '';
+
+            if (data.eew && data.eew.hypo) {
+                const hypo = data.eew.hypo; 
+                const wave = data.eew.wave;
+                const lat = parseFloat(hypo.latitude.replace('N', '')); 
+                const lon = parseFloat(hypo.longitude.replace('E', ''));
+                const eewId = hypo.reportId || hypo.regionName;
+                
+                // 💡 警報か予報かを判定するフラグ (最大予測震度が 5弱(5-), 5強(5+), 6弱(6-), 6強(6+), 7 の場合は警報)
+                // 一般的な数値（5, 6, 7）や強震モニタ表記（5-, 5+, 6-, 6+, 7）を網羅します
+                const isAlert = ["5-", "5弱", "5+", "5強", "6-", "6弱", "6+", "6強", "7", "5", "6"].includes(String(hypo.calcintensity).trim());
+
+                if (isAlert) {
+                    eewDiv.innerHTML = `<div class="eew-alert" style="background:#ff1e1e;"><strong>【緊急地震速報 (警報)】</strong><br><strong>強い揺れに警戒してください。</strong><br>震源地: ${hypo.regionName}<br>最大予測: 震度${hypo.calcintensity}</div>`;
+                } else {
+                    eewDiv.innerHTML = `<div class="eew-alert" style="background:#ffaa00; color:#000;"><strong>【緊急地震速報 (予報)】</strong><br>震源地: ${hypo.regionName}<br>最大予測: 震度${hypo.calcintensity}</div>`;
+                }
+
+                L.marker([lat, lon], {icon: L.divIcon({ html: '<b style="color:#ff1e1e; font-size:24px; text-shadow: 0 0 4px #000;">×</b>' })}).addTo(eewLayer);
+                
+                if (wave) {
+                    L.circle([lat, lon], { radius: parseFloat(wave.pRadius) * 1000, color: '#2277ff', weight: 1.5, dashArray: '4, 6', fill: false }).addTo(eewLayer);
+                    L.circle([lat, lon], { radius: parseFloat(wave.sRadius) * 1000, color: '#ff2a2a', weight: 2.5, fillColor: '#ff2a2a', fillOpacity: 0.15 }).addTo(eewLayer);
+                }
+
+                // 💡 音声の新規発報・鳴り分け処理
+                if (eewId !== lastEewId) { 
+                    if (isAlert) {
+                        playSavedSound('eew2'); // 警報音
+                    } else {
+                        playSavedSound('eew');  // 予報音
+                    }
+                    lastEewId = eewId;
+                }
+            } else {
+                eewDiv.innerHTML = '<div style="color:#888; font-size:12px; margin-top:5px;">緊急地震速報は発表されていません</div>';
+                lastEewId = null;
+            }
+
+        }
+
+        db.channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'kyoshin_current', filter: 'id=eq.1' }, (p) => {
+            if(p.new) renderMonitor(p.new);
+        }).subscribe();
+
+        async function init() {
+            listenControlChanges();
+            const { data: ctrl } = await db.from('kyoshin_control').select('*').eq('id', 1).maybeSingle();
+            if(ctrl && ctrl.mode === 'replay') {
+                document.getElementById('mode-display').innerText = "REPLAY";
+                document.getElementById('mode-display').className = "mode-badge mode-replay";
+                document.getElementById('btn-stop-replay').style.display = "block";
+            }
+            
+            const { data } = await db.from('kyoshin_current').select('*').eq('id', 1).maybeSingle();
+            if (data) renderMonitor(data);
+        }
+
+        init();
+    </script>
+</body>
+</html>
