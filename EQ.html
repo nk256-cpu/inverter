@@ -360,7 +360,7 @@ if (maxRealShindo >= 0.5) { // 門番：震度1以上（0.5以上）の揺れが
                 
                 // 💡 警報か予報かを判定するフラグ (最大予測震度が 5弱(5-), 5強(5+), 6弱(6-), 6強(6+), 7 の場合は警報)
                 // 一般的な数値（5, 6, 7）や強震モニタ表記（5-, 5+, 6-, 6+, 7）を網羅します
-                const isAlert = ["5-", "5弱", "5+", "5強", "6-", "6弱", "6+", "6強", "7", "5", "6"].includes(String(hypo.calcintensity).trim());
+                const isAlert = ["5-", "5弱", "5+", "5強", "6-", "6弱", "6+", "6強", "7", "5", "6","07","06","05"].includes(String(hypo.calcintensity).trim());
 
                 if (isAlert) {
                     eewDiv.innerHTML = `<div class="eew-alert" style="background:#ff1e1e;"><strong>【緊急地震速報 (警報)】</strong><br><strong>強い揺れに警戒してください。</strong><br>震源地: ${hypo.regionName}<br>最大予測: 震度${hypo.calcintensity}</div>`;
