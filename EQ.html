@@ -331,7 +331,7 @@
                 const estLat = sumLat / shakingPoints.length; const estLon = sumLon / shakingPoints.length;
                 document.getElementById('epicenter-container').innerHTML = `<div class="estimated-epicenter">⚠ 揺れ検知 (${shakingPoints.length}地点)<br>簡易推定震央を表示中</div>`;
                 L.marker([estLat, estLon], { icon: L.divIcon({ html: '<b style="color:#ffcc00; font-size:24px; text-shadow:0 0 5px #000;">×</b>' }) }).addTo(detectLayer);
-                playSavedSound('detect');
+                //playSavedSound('detect');
             }else{}
           // --- 修正後：実際の震度（realShindo）ベースで音を鳴らすロジック ---
 let maxRealShindo = maxRawValue - 3.0; // 実際の最大震度（-3.0 〜 7.0）を計算
@@ -376,14 +376,16 @@ if (maxRealShindo >= 0.5) { // 門番：震度1以上（0.5以上）の揺れが
                 }
 
                 // 💡 音声の新規発報・鳴り分け処理
-                if (eewId !== lastEewId) { 
+                 
                     if (isAlert) {
                         playSavedSound('eew2'); // 警報音
+playSavedSound('eew2');
                     } else {
-                        playSavedSound('eew');  // 予報音
+                        playSavedSound('eew');  // 予報音 
+playSavedSound('eew');
                     }
-                    lastEewId = eewId;
-                }
+                   
+                
             } else {
                 eewDiv.innerHTML = '<div style="color:#888; font-size:12px; margin-top:5px;">緊急地震速報は発表されていません</div>';
                 lastEewId = null;
