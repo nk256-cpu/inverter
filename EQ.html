@@ -164,6 +164,39 @@
             };
             reader.readAsArrayBuffer(file);
         }
+async function getEarthquakeAndTsunamiData() {
+  // 地震情報 (551) と 津波予報 (552) のエンドポイントURL（最大10件取得）
+  const earthquakeUrl = "https://p2pquake.net";
+  const tsunamiUrl = "https://p2pquake.net";
+
+  try {
+    // 両方のAPIを同時に叩いて結果を待つ
+    const [quakeResponse, tsunamiResponse] = await Promise.all([
+      fetch(earthquakeUrl),
+      fetch(tsunamiUrl)
+    ]);
+
+    if (!quakeResponse.ok || !tsunamiResponse.ok) {
+      throw new Error("データの取得に失敗しました");
+    }
+
+    // JSON形式に変換
+    const earthquakes = await quakeResponse.json();
+    const tsunamis = await tsunamiResponse.json();
+
+    // 結果を出力
+    console.log("--- 過去10件の地震情報 ---", earthquakes);
+    console.log("--- 過去10件の津波予報 ---", tsunamis);
+    alert(tsunamis);
+    // 取得したデータを画面表示などに利用できます
+    return tsunamis;
+
+  } catch (error) {
+    console.error("エラーが発生しました:", error);
+  }
+}
+
+
 
         function loadAllSavedSounds() {
             const store = idb.transaction(["sounds"], "readonly").objectStore("sounds");
